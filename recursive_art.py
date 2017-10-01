@@ -2,9 +2,9 @@
 
 import random
 from PIL import Image
+from math import cos, sin, pi
 
-
-def build_random_function(min_depth, max_depth):
+def build_random_function(min_depth, max_depth, movie):
     """Build a random function.
 
     Builds a random function of depth at least min_depth and depth at most
@@ -20,11 +20,26 @@ def build_random_function(min_depth, max_depth):
         (See the assignment writ-eup for details on the representation of
         these functions)
     """
-    # TODO: implement this
-    pass
+    functions = ['prod', 'avg', 'acos_pi', 'asin_pi', 'cos_pi', 'sin_pi', 'cubed'] # possible operations
+
+    if movie:
+        variables = [['x'],['y'],['t']]  # three variables when making a movie
+    else:
+        variables = [['x'],['y']]
+
+    if max_depth == 0:
+        return variables[random.randint(0,len(variables)-1)]  # if maxed depth is reached, stop recursion
+
+    rand_func = functions[random.randint(0,len(functions)-1)]  # pick a random function
+
+    if rand_func in functions[0:4]: # for the two-variable functions
+        return [rand_func, build_random_function(min_depth-1,max_depth-1,movie), build_random_function(min_depth-1,max_depth-1,movie)]
+    else:  # for one variable functions
+        return [rand_func, build_random_function(min_depth-1,max_depth-1,movie)]
 
 
-def evaluate_random_function(f, x, y):
+
+def evaluate_random_function(f, x, y, t):
     """Evaluate the random function f with inputs x,y.
 
     The representation of the function f is defined in the assignment write-up.
@@ -43,9 +58,26 @@ def evaluate_random_function(f, x, y):
         >>> evaluate_random_function(["y"],0.1,0.02)
         0.02
     """
-    # TODO: implement this
-    pass
-
+    if f == ['x']:
+        return x
+    if f == ['y']:
+        return y
+    if f == ['t']:
+        return t
+    if f[0] == 'prod':
+        return evaluate_random_function(f[1],x,y,t)*evaluate_random_function(f[2],x,y,t)
+    if f[0] == 'avg':
+        return .5*(evaluate_random_function(f[1],x,y,t)+evaluate_random_function(f[2],x,y,t))
+    if f[0] == 'acos_pi':
+        return evaluate_random_function(f[1],x,y,t) * cos(pi * evaluate_random_function(f[2],x,y,t))
+    if f[0] == 'asin_pi':
+        return evaluate_random_function(f[1],x,y,t) * sin(pi * evaluate_random_function(f[2],x,y,t))
+    if f[0] == 'sin_pi':
+        return sin(pi * evaluate_random_function(f[1],x,y,t))
+    if f[0] == 'cos_pi':
+        return cos(pi * evaluate_random_function(f[1],x,y,t))
+    if f[0] == 'cubed':
+        return evaluate_random_function(f[1],x,y,t)**3
 
 def remap_interval(val,
                    input_interval_start,
@@ -80,8 +112,7 @@ def remap_interval(val,
         >>> remap_interval(5, 4, 6, 1, 2)
         1.5
     """
-    # TODO: implement this
-    pass
+    return output_interval_start + ( val - input_interval_start) * ( output_interval_end - output_interval_start ) / float( input_interval_end - input_interval_start)
 
 
 def color_map(val):
@@ -137,10 +168,10 @@ def generate_art(filename, x_size=350, y_size=350):
         x_size, y_size: optional args to set image dimensions (default: 350)
     """
     # Functions for red, green, and blue channels - where the magic happens!
-    red_function = ["x"]
-    green_function = ["y"]
-    blue_function = ["x"]
-
+    red_function = build_random_function(7, 9, False)
+    green_function = build_random_function(7, 9, False)
+    blue_function = build_random_function(7, 9, False)
+    t = 0
     # Create image and loop over all pixels
     im = Image.new("RGB", (x_size, y_size))
     pixels = im.load()
@@ -149,23 +180,49 @@ def generate_art(filename, x_size=350, y_size=350):
             x = remap_interval(i, 0, x_size, -1, 1)
             y = remap_interval(j, 0, y_size, -1, 1)
             pixels[i, j] = (
-                color_map(evaluate_random_function(red_function, x, y)),
-                color_map(evaluate_random_function(green_function, x, y)),
-                color_map(evaluate_random_function(blue_function, x, y))
+                color_map(evaluate_random_function(red_function, x, y, t)),
+                color_map(evaluate_random_function(green_function, x, y, t)),
+                color_map(evaluate_random_function(blue_function, x, y, t))
             )
 
     im.save(filename)
 
+def generate_movie(pathname, frames, x_size=500, y_size=500):
+    """Generate computational GIF and save as folder of images.
+
+    Args:
+        filename: string filename for image (should be .png)
+        frames: number of frames to have in the movie
+        x_size, y_size: optional args to set image dimensions (default: 350)
+    """
+    # Functions for red, green, and blue channels - where the magic happens!
+    red_function = build_random_function(4, 7, True)
+    green_function = build_random_function(4, 7, True)
+    blue_function = build_random_function(4, 7, True)
+
+    # Create image and loop over all pixels
+    im = Image.new("RGB", (x_size, y_size))
+    pixels = im.load()
+    for n in range(frames):
+        t = remap_interval(n, 0, frames, -1, 1)
+        for i in range(x_size):
+            for j in range(y_size):
+                x = remap_interval(i, 0, x_size, -1, 1)
+                y = remap_interval(j, 0, y_size, -1, 1)
+                pixels[i, j] = (
+                    color_map(evaluate_random_function(red_function, x, y, t)),
+                    color_map(evaluate_random_function(green_function, x, y, t)),
+                    color_map(evaluate_random_function(blue_function, x, y, t))
+                )
+        print("%s//frame%d.png" % (pathname, n))
+        im.save("%s//frame%d.png" % (pathname, n))
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+#    import doctest
+#    doctest.testmod(verbose=True)
 
-    # Create some computational art!
-    # TODO: Un-comment the generate_art function call after you
-    #       implement remap_interval and evaluate_random_function
-    # generate_art("myart.png")
+#   Create some computational art!
+    frames = 100
+    generate_movie("C://Users//iblancett//Documents//SoftwareDesign//ComputationalArt//movie", frames, 350, 350)
 
-    # Test that PIL is installed correctly
-    # TODO: Comment or remove this function call after testing PIL install
-    test_image("noise.png")
+#    test_image("noise.png")
