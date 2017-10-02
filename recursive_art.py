@@ -1,7 +1,13 @@
-"""TODO: Put your header comment here."""
+"""
+Generates computational art in png format
+
+@author: Vivien Chen
+
+"""
 
 import random
 from PIL import Image
+import math
 
 
 def build_random_function(min_depth, max_depth):
@@ -17,11 +23,38 @@ def build_random_function(min_depth, max_depth):
 
     Returns:
         The randomly generated function represented as a nested list.
-        (See the assignment writ-eup for details on the representation of
+        (See the assignment write-up for details on the representation of
         these functions)
     """
-    # TODO: implement this
-    pass
+    # Comment out function to exclude it from building blocks.
+    functions = [
+                ["prod", ["x"], ["y"]],
+                ["avg", ["x"], ["y"]],
+                ["cos_pi", ["x"]],
+                ["sin_pi", ["x"]],
+                ["square", ["x"]],
+                ["cube", ["x"]],
+                ["negative", ["x"]],
+                ["sum", ["x"], ["y"]],
+                ["mag", ["x"], ["y"]],
+                ["square_x_y", ["x"], ["y"]],
+                ]
+
+    depth = random.randint(min_depth, max_depth)
+
+    func = list(random.choice(functions))
+
+    if depth == 1:
+        return list(random.choice([["x"], ["y"]]))
+
+    elif depth > 1:
+        if len(func) == 2:
+            func[1] = build_random_function(depth - 1, depth - 1)
+        elif len(func) == 3:
+            func[1] = build_random_function(depth - 1, depth - 1)
+            func[2] = build_random_function(depth - 1, depth - 1)
+
+    return func
 
 
 def evaluate_random_function(f, x, y):
@@ -43,8 +76,49 @@ def evaluate_random_function(f, x, y):
         >>> evaluate_random_function(["y"],0.1,0.02)
         0.02
     """
-    # TODO: implement this
-    pass
+    def evaluate_single_function(func, x, y=None):
+        """Evaluate the single function func with inputs x,y.
+
+        Args:
+            func: the single function to evaluate
+            x: the value of x to be used to evaluate the function
+            y: the value of y to be used to evaluate the function, set to None by default
+
+        Returns:
+            The single function value
+        """
+        if func == "x":
+            return x
+        elif func == "y":
+            return y
+        elif func == "prod":
+            return x * y
+        elif func == "avg":
+            return 0.5 * (x + y)
+        elif func == "cos_pi":
+            return math.cos(math.pi * x)
+        elif func == "sin_pi":
+            return math.sin(math.pi * x)
+        elif func == "square":
+            return x ** 2
+        elif func == "cube":
+            return x ** 3
+        elif func == "negative":
+            return -x
+        elif func == "sum":
+            return x + y
+        elif func == "mag":
+            return math.sqrt(x**2 + y**2)
+        elif func == "square_x_y":
+            return x**2 + y**2
+
+    if len(f) == 1:
+        return evaluate_single_function(f[0], x, y)
+    elif len(f) == 2:
+        return evaluate_single_function(f[0], evaluate_random_function(f[1], x, y))
+    elif len(f) == 3:
+        return evaluate_single_function(f[0], evaluate_random_function(f[1], x, y),
+                             evaluate_random_function(f[2], x, y))
 
 
 def remap_interval(val,
@@ -80,8 +154,13 @@ def remap_interval(val,
         >>> remap_interval(5, 4, 6, 1, 2)
         1.5
     """
-    # TODO: implement this
-    pass
+    frontEnd = val - input_interval_start
+    backEnd = input_interval_end - val
+
+    interval_ = (output_interval_end - output_interval_start) / (frontEnd + backEnd)
+    output_ = output_interval_start + (frontEnd * interval_)
+
+    return output_
 
 
 def color_map(val):
@@ -137,9 +216,14 @@ def generate_art(filename, x_size=350, y_size=350):
         x_size, y_size: optional args to set image dimensions (default: 350)
     """
     # Functions for red, green, and blue channels - where the magic happens!
-    red_function = ["x"]
-    green_function = ["y"]
-    blue_function = ["x"]
+    red_function = build_random_function(7, 9)
+    green_function = build_random_function(7, 9)
+    blue_function = build_random_function(7, 9)
+
+    # Print functions for viewing pleasure
+    print("RED FUNCTION:", red_function)
+    print("GREEN FUNCTION:", green_function)
+    print("BLUE FUNCTION:", blue_function)
 
     # Create image and loop over all pixels
     im = Image.new("RGB", (x_size, y_size))
@@ -164,8 +248,8 @@ if __name__ == '__main__':
     # Create some computational art!
     # TODO: Un-comment the generate_art function call after you
     #       implement remap_interval and evaluate_random_function
-    # generate_art("myart.png")
+    generate_art("myart.png")
 
     # Test that PIL is installed correctly
     # TODO: Comment or remove this function call after testing PIL install
-    test_image("noise.png")
+    # test_image("noise.png")
