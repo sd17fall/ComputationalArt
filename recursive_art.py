@@ -2,6 +2,33 @@
 
 import random
 from PIL import Image
+import math
+pi = 3.14
+def prod(a,b): #Returns the product of two values
+    return a * b
+
+def avg(a,b):           #returns the average of two values
+   return 0.5 * (a + b)
+
+def cos_pi(a):              #returns the cosine of a value
+    return math.cos(pi * a)
+
+def sin_pi(a):
+    return math.sin(pi * a) #returns the sine of a value
+
+def findx(a , b):           #returns the x value
+    return a
+
+def findy(a,b):             #returns the y value
+    return b
+def times_neg_1(a):         #returns the negitive 
+    return -1 * a
+def mean(a,b):               #returns the the geometric mean
+    return (abs(a) * abs(b)) ** 0.5
+
+
+
+
 
 
 def build_random_function(min_depth, max_depth):
@@ -20,7 +47,47 @@ def build_random_function(min_depth, max_depth):
         (See the assignment writ-eup for details on the representation of
         these functions)
     """
+    depth = random.randint(min_depth,max_depth);
+
+    allfunc = ['prod','avg','cos_pi','sin_pi','x','y','times_neg_1','mean']
+    xory = ['y','x']
+    func = random.choice(allfunc)
+    #print (func, depth)
+
+    if depth == 1:
+        return random.choice(xory)
+    if func == 'prod':
+        return ['prod',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+    elif func == 'avg':
+        return ['avg',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+    elif func == 'mean':
+        return ['mean',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+    elif func == 'cos_pi':
+        return ['cos_pi',build_random_function(depth-1, depth-1)]
+    elif func == 'sin_pi':
+        return ['sin_pi',build_random_function(depth-1, depth-1)]
+    elif func == 'times_neg_1':
+        return ['times_neg_1',build_random_function(depth-1, depth-1)]
+    elif func == 'x':
+        return ['x',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+    elif func == 'y':
+        return ['y',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+    else:
+        print ("error")
+
+
+
+  #  prod = ['prod',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+  #  avg = ['avg',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+  #  cos = ['cos_pi',build_random_function(depth-1, depth-1)]
+  #  sin = ['sin_pi',build_random_function(depth-1, depth-1)]
+  #  x = ['x',build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+  #  y = ['y', build_random_function(depth-1, depth-1),build_random_function(depth-1, depth-1)]
+  
+  
+
     # TODO: implement this
+
     pass
 
 
@@ -43,7 +110,47 @@ def evaluate_random_function(f, x, y):
         >>> evaluate_random_function(["y"],0.1,0.02)
         0.02
     """
-    # TODO: implement this
+    #if (f[0] == 'x') | (f[0] == 'X'):
+    #    return x
+    #elif (f[0] == 'y') | (f[0] == 'y'):
+    #    return y
+    #else:
+    #    return "Error"
+    #TODO: implement this
+    #print (f)
+    e = evaluate_random_function #dummy function to make the code take up less room
+    if len(f) == 1:              # only happens on the inner most layer when the list is [x] or [y]
+        if f[0] == 'x':
+            return x
+        elif f[0] == 'y':
+            return y
+        else:
+            print ("Evaluating Error", f[0])        #if somthing other than x or y is found somthing went wrong
+
+    elif f[0] == 'prod':
+        return prod(e(f[1],x,y),e(f[2],x,y))
+    elif f[0] == 'avg':
+        return avg(e(f[1],x,y),e(f[2],x,y))
+    elif f[0] == 'cos_pi':
+        return cos_pi(e(f[1],x,y))
+    elif f[0] == 'sin_pi':
+        return sin_pi(e(f[1],x,y))
+    elif f[0] == 'x':
+        return findx(e(f[1],x,y),e(f[2],x,y))
+    elif f[0] == 'y':
+        return findy(e(f[1],x,y),e(f[2],x,y))
+    elif f[0] == 'mean':
+        return mean(e(f[1],x,y),e(f[2],x,y))
+    elif f[0] == 'times_neg_1':
+        return times_neg_1(e(f[1],x,y))
+    else:
+        print ("Evaluation Error", f[0]) # #if somthing other than the above options is found somthing went wrong
+    
+
+
+
+
+
     pass
 
 
@@ -79,7 +186,13 @@ def remap_interval(val,
         1.0
         >>> remap_interval(5, 4, 6, 1, 2)
         1.5
-    """
+           """
+
+    difference = val-input_interval_start
+    difference = difference/ (input_interval_end - input_interval_start)
+    difference = difference * (output_interval_end - output_interval_start)
+    difference = difference + output_interval_start
+    return difference
     # TODO: implement this
     pass
 
@@ -137,10 +250,11 @@ def generate_art(filename, x_size=350, y_size=350):
         x_size, y_size: optional args to set image dimensions (default: 350)
     """
     # Functions for red, green, and blue channels - where the magic happens!
-    red_function = ["x"]
-    green_function = ["y"]
-    blue_function = ["x"]
-
+    red_function = build_random_function(9, 15)
+    green_function = build_random_function(9, 15)
+    blue_function = build_random_function(9, 15)
+    x = random.uniform(0, 1)
+    y = random.uniform(0, 1)
     # Create image and loop over all pixels
     im = Image.new("RGB", (x_size, y_size))
     pixels = im.load()
@@ -160,12 +274,15 @@ def generate_art(filename, x_size=350, y_size=350):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+    #print(build_random_function(7,9))
+   # doctest.run_docstring_examples(remap_interval, globals(), verbose=True)
 
     # Create some computational art!
     # TODO: Un-comment the generate_art function call after you
     #       implement remap_interval and evaluate_random_function
-    # generate_art("myart.png")
+    for i in range(10):
+        generate_art("Test6." + str(i) + ".png")
 
     # Test that PIL is installed correctly
     # TODO: Comment or remove this function call after testing PIL install
-    test_image("noise.png")
+    #test_image("noise1.png")
